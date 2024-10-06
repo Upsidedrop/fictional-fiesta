@@ -1,0 +1,1 @@
+This is my first c++ project. I'm revisiting a project I created a while ago with C#/Unity that aims to procedurally generate music using what I know of music theory. Hopefully results will be more promising and I'll have something to put on my resume. 
