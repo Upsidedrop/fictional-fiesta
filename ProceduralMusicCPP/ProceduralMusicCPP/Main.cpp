@@ -4,13 +4,16 @@
 
 int main()
 {
+	srand(time(NULL));
+
 	ChordProgression chP;
 	propagate_scales();
-	chP.chords.push_back(Chord({ "A", "C#", "E", "G#"}));
-	chP.chords.push_back(Chord({ "D", "F", "A", "C#"}));
-	chP.chords.push_back(Chord({ "G#", "B#", "D", "F"}));
-	for (int i : chP.find_common_scale()) {
-		std::cout << id_to_note(i) << "\n";
-	}
+	chP.chords.push_back(Chord({"D", "F", "A", "C"}));
+	chP.chords.push_back(Chord({"D#", "G", "A#", "C#"}));
+	chP.chords.push_back(Chord({"C", "E","G","B"}));
+	chP.chords.push_back(Chord({"C#", "F","G#","B"}));
+	chP.chords.push_back(Chord({"A", "C#","E","G"}));
+
+	chP.commonScale = chP.find_common_scale();
 }
 

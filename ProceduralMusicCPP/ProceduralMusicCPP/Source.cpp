@@ -11,41 +11,48 @@ const int integer2Ascii = 48;
 int octave = 5;
 int currentBar = 0;
 vector<vector<int>> scales= {
-	//Major Scales
-	{0,2,4,5,7,9,11}, //C Ionian
-	{0,2,3,5,7,9,10}, //C Dorian
-	{0,1,3,5,7,8,10}, //C Phrygian
-	{0,2,4,6,7,9,11}, //C Lydian
-	{0,2,4,5,7,9,10}, //C Mixolydian
-	{0,2,3,5,7,8,10}, //C Aeolian
-	{0,1,3,5,6,8,10}, //C Locrian
+	{0,2,4,5,7,9,11},	//Major
 	
-	
-	//Melodic Minor Scales
-	{0,2,3,5,7,9,11}, //C Melodic minor
-	{0,1,3,5,7,9,10}, //C Phrygian natural 6
-	{0,2,4,6,8,9,11}, //C Lydian Augmented
-	{0,2,4,6,7,9,10}, //C Lydian Dominant
-	{0,2,4,5,7,8,10}, //C Mixolydian b6
-	{0,2,3,5,6,8,10}, //C Half-diminished
-	{0,1,3,4,6,8,10}, //C Altered
+	{0,2,3,5,7,9,11},	//Melodic minor
 
-	//Other Scales
-	{0,2,3,5,7,8,11} //C Harmonic minor
+	{0,2,3,5,7,8,11},	//Harmonic minor
 
+	{0,2,4,6,8,10},		//Wholetone
+
+	{0,1,3,4,6,7,9,10},	//Half Diminished
+
+	{0,2,4,7,9},		//Major Pentatonic
+
+	{0,3,4,7,8,11},		//Augmented
 };
 
 void propagate_scales() {
 	vector<vector<int>> res;
-	for (size_t i = 1; i < octaveSize; i++)
-	{
-		for (vector<int> scale : scales) {
-			for_each(scale.begin(), scale.end(), [i](int& n) {n+= i; n %= octaveSize;});
-			res.push_back(scale);
-		}
-	}
+	//Major, Melodic Minor, Harmonic Minor
+	boost_scale(res,0,2,octaveSize);
+
+	//Wholetone
+	boost_scale(res, 3, 4, 2);
+
+	//Diminished
+	boost_scale(res, 4, 5, 3);
+
+	//Pentatonic
+	boost_scale(res, 5, 6, octaveSize);
 
 	scales.insert(scales.end(), res.begin(), res.end());
+}
+
+void boost_scale(std::vector<std::vector<int>>& res, int start, int end, int loopTime)
+{
+	for (size_t i = 1; i < loopTime; i++)
+	{
+		for (auto it = scales.begin() + start; it != scales.begin() + end; ++it) {
+			vector<int> tempScale = *it;
+			for_each(tempScale.begin(), tempScale.end(), [i](int& n) {n += i; n %= octaveSize;});
+			res.push_back(tempScale);
+		}
+	}
 }
 
 string id_to_note(int id) {
@@ -91,8 +98,8 @@ vector<int> ChordProgression::generate_bar(enum Dissonance dis) {
 vector<int> ChordProgression::arpeggiate_chords() {
 	vector<int> res;
 	int count = 0;
-	for (int i : bounce_num(chords[currentBar % 4].notes.size(), 8)) {
-		res.push_back(chords[currentBar % 4].notes[i] + octave * octaveSize);
+	for (int i : bounce_num(chords[currentBar % chords.size()].notes.size(), 8)) {
+		res.push_back(chords[currentBar % chords.size()].notes[i] + octave * octaveSize);
 	}
 	return res;
 }
@@ -116,34 +123,43 @@ vector<int> bounce_num(const int limit, int length) {
 
 vector<int> ChordProgression::find_common_scale() {
 	vector<int> commonNotes;
+	vector<int> commonAvoidNotes;
 	for (Chord chord : chords) {
-		commonNotes.push_back(chord.notes[0]);
-		commonNotes.push_back(chord.notes[1]);
-		commonNotes.push_back(chord.notes[3]);
+		
+		for (int avoidNote : chord.avoidNotes) {
+			commonAvoidNotes.push_back(avoidNote);
+		}
+		for (int note : chord.notes) {
+			commonNotes.push_back(note);
+		}
 	}
-	sort(commonNotes.begin(), commonNotes.end());
-	auto iterator = unique(commonNotes.begin(), commonNotes.end());
-	commonNotes.erase(iterator, commonNotes.end());
+
 	
-	vector<int> res;
+	vector<vector<int>> res;
 	int maxCount = 0;
 	for (const vector<int> vec : scales) {
-		check_scale_similarity(vec, commonNotes, maxCount, res);
+		check_scale_similarity(vec, commonNotes, maxCount, res, commonAvoidNotes);
 	}
-	return res;
+	return res[rand() % res.size()];
 }
 
-void ChordProgression::check_scale_similarity(const std::vector<int>& vec, std::vector<int>& commonNotes, int& maxCount, std::vector<int>& res)
+void ChordProgression::check_scale_similarity(vector<int> vec, vector<int> commonNotes, int& maxCount, vector<vector<int>>& res, vector<int> commonAvoidNotes)
 {
 	int count = 0;
 	for (const int i : vec) {
 		if (find(commonNotes.begin(), commonNotes.end(), i) != commonNotes.end()) {
 			count++;
 		}
+		if (find(commonAvoidNotes.begin(), commonAvoidNotes.end(), i) != commonAvoidNotes.end()) {
+			count--;
+		}
 		if (count > maxCount)
 		{
 			maxCount = count;
-			res = vec;
+			res.clear();
+		}
+		if (count == maxCount){
+			res.push_back(vec);
 		}
 	}
 }
