@@ -18,6 +18,7 @@ class Chord {
 };
 class ChordProgression {
 	vector<int> arpeggiate_chords();
+	vector<int> run_scale(int length);
 	void check_scale_similarity(vector<int> vec, vector<int> commonNotes, int& maxCount, vector<vector<int>>& res, vector<int> commonAvoidNotes);
 
 	public:
@@ -29,5 +30,6 @@ class ChordProgression {
 		
 };
 enum Dissonance {
-	ARPEGGIATE
+	ARPEGGIATE,
+	RUN_SCALE
 };

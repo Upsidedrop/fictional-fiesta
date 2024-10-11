@@ -1,18 +1,18 @@
+#include "Header.h"
+#include <algorithm>
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include "Header.h"
 
 using namespace std;
 
 const int octaveSize = 12;
-const string chromaticScale[octaveSize] = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
+const string chromaticScale[octaveSize] = { "C","C#","D","D#","E","F","F#","G","G#","A","A#","B" };
 const int integer2Ascii = 48;
 int octave = 5;
 int currentBar = 0;
-vector<vector<int>> scales= {
+vector<vector<int>> scales = {
 	{0,2,4,5,7,9,11},	//Major
-	
+
 	{0,2,3,5,7,9,11},	//Melodic minor
 
 	{0,2,3,5,7,8,11},	//Harmonic minor
@@ -29,7 +29,7 @@ vector<vector<int>> scales= {
 void propagate_scales() {
 	vector<vector<int>> res;
 	//Major, Melodic Minor, Harmonic Minor
-	boost_scale(res,0,2,octaveSize);
+	boost_scale(res, 0, 2, octaveSize);
 
 	//Wholetone
 	boost_scale(res, 3, 4, 2);
@@ -43,7 +43,7 @@ void propagate_scales() {
 	scales.insert(scales.end(), res.begin(), res.end());
 }
 
-void boost_scale(std::vector<std::vector<int>>& res, int start, int end, int loopTime)
+void boost_scale(vector<vector<int>>& res, int start, int end, int loopTime)
 {
 	for (size_t i = 1; i < loopTime; i++)
 	{
@@ -91,6 +91,8 @@ vector<int> ChordProgression::generate_bar(enum Dissonance dis) {
 		case ARPEGGIATE:
 			return arpeggiate_chords();
 			break;
+		case RUN_SCALE:
+			return run_scale(96);
 	}
 	return { -1 };
 }
@@ -115,7 +117,7 @@ vector<int> bounce_num(const int limit, int length) {
 		if (i >= limit || i < 0)
 		{
 			countDir *= -1;
-			i += countDir*2;
+			i += countDir * 2;
 		}
 	}
 	return res;
@@ -125,7 +127,7 @@ vector<int> ChordProgression::find_common_scale() {
 	vector<int> commonNotes;
 	vector<int> commonAvoidNotes;
 	for (Chord chord : chords) {
-		
+
 		for (int avoidNote : chord.avoidNotes) {
 			commonAvoidNotes.push_back(avoidNote);
 		}
@@ -134,7 +136,7 @@ vector<int> ChordProgression::find_common_scale() {
 		}
 	}
 
-	
+
 	vector<vector<int>> res;
 	int maxCount = 0;
 	for (const vector<int> vec : scales) {
@@ -158,8 +160,26 @@ void ChordProgression::check_scale_similarity(vector<int> vec, vector<int> commo
 			maxCount = count;
 			res.clear();
 		}
-		if (count == maxCount){
+		if (count == maxCount) {
 			res.push_back(vec);
 		}
 	}
+}
+vector<int> ChordProgression::run_scale(int length) {
+	int pos = 0;
+	vector<int> res;
+	bool movingRight = true;
+	int distance = rand() % 8 + 1;
+	for (size_t i = 0; i < length; i++)
+	{
+		pos += movingRight ? 1 : -1;
+		distance--;
+		if (distance == 0)
+		{
+			movingRight = !movingRight;
+			distance = rand() % 8 + 1;
+		}
+		res.push_back(commonScale[pos % commonScale.size()]);
+	}
+	return res;
 }
