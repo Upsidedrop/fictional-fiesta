@@ -25,7 +25,6 @@ class ChordProgression {
 		vector<Chord> chords;
 		vector<int> generate_bar(enum Dissonance dis);
 		vector<int> find_common_scale();
-		ChordProgression();
 		
 		
 };
